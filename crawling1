@@ -1,0 +1,47 @@
+import urllib
+from urllib.request import urlopen
+
+from bs4 import BeautifulSoup as bs
+import requests
+
+url = "https://ceoworld.biz/2020/02/28/rich-list-index-2020/"
+
+res = requests.get(url)
+html = res.text.strip()
+soup = bs(html, 'html.parser')  # BeautifulSoup -> bs
+rich_link = soup.select('tbody.row-hover td.column-2')
+
+rich_list = [str(rich).replace("</td>", '').replace("<td class=\"column-2\">", '') for rich in rich_link]
+print(rich_list)    # 리스트에서 html 코드 제거
+
+rich_friends = [rich.replace(' ', '+') for rich in rich_list]
+print(rich_friends)     # 리스트에서 띄어쓰기 없애고 대신 url 주소에 띄어쓰기로 먹히는 + 대체
+
+r10 = rich_friends[:10]  # 상위 10명만
+
+rank = 1  # 부자 순위대로 나열하기 위한 카운트
+for r in r10:
+    url = f'https://www.google.com/search?q={r}&sxsrf=ALeKk01WuCtRoFmDGbZmzgJxG5b6wz8VrQ:1592534710712&' \
+          'source=lnms&tbm=isch&sa=X&ved=2ahUKEwjEtuWN7ozqAhVbIIgKHcJdD9MQ_AUoAXoECBgQAw&biw=1920&bih=1089'
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    html = urlopen(req)
+    soup = bs(html, "html.parser")
+    img = soup.find_all(class_='t0fcAb')
+    print(img)
+
+    n = 1  # 이미지 따로 저장하기 위한 카운트
+    for i in img:
+        print(n)
+        imgUrl = i.attrs['src']
+        with urlopen(imgUrl) as f:
+            with open('C:\\Users\\STU\\labs\\lab-ml\\project_cl\\images/' + str(rank) + '_' +
+                      r.replace('+', '') + str(n) + '.jpg', mode='wb') as h:  # w - write b - binary
+                img = f.read()
+                h.write(img)
+        n += 1
+        if n >= 10:     # 10장만 출력하기
+            break
+    rank += 1
+
+
+
